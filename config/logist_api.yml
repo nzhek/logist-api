@@ -1,0 +1,12 @@
+postgres:
+  database: 'logist_api'
+  user: 'postgres'
+  password: 'postgres'
+  host: 'localhost'
+  port: '5432'
+  minsize: 1
+  maxsize: 5
+app:
+  host: "127.0.0.1"
+  port: "8080"
+  debug: true
