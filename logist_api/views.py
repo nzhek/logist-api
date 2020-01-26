@@ -29,7 +29,7 @@ async def index(request):
                 )))
 
 
-@routes.get('/poll/{question_id}/', name='poll')
+@routes.get('/poll/{question_id}', name='poll')
 async def poll(request):
     async with request.app['db'].acquire() as conn:
         question_id = request.match_info['question_id']
@@ -44,7 +44,7 @@ async def poll(request):
         }, default=_default)))
 
 
-@routes.get("/employers/", name="employers")
+@routes.get("/employers", name="employers")
 async def employers_view(request):
     return web.json_response([
         {"id": 1, "full_name": "Чижик Пыжик Чижик", "position_id": 1},
@@ -53,12 +53,12 @@ async def employers_view(request):
     ])
 
 
-@routes.get("/employers/{entry_id}/", name="employer_detail")
+@routes.get("/employers/{entry_id}", name="employer_detail")
 async def employer_view(request):
     return web.json_response({"id": 1, "full_name": "Чижик Пыжик Чижик", "position_id": 1})
 
 
-@routes.get("/statuses/", name="statuses")
+@routes.get("/statuses", name="statuses")
 async def statuses_view(request):
     return web.json_response([
         {
@@ -94,7 +94,7 @@ async def statuses_view(request):
     ])
 
 
-@routes.get("/statuses/{entry_id}/", name="status_detail")
+@routes.get("/statuses/{entry_id}", name="status_detail")
 async def status_view(request):
     return web.json_response({
         "id": 1,
@@ -103,7 +103,7 @@ async def status_view(request):
     })
 
 
-@routes.get("/positions/", name="positions")
+@routes.get("/positions", name="positions")
 async def positions_view(request):
     return web.json_response([
         {
@@ -125,7 +125,7 @@ async def positions_view(request):
     ])
 
 
-@routes.get("/positions/{entry_id}/", name="position_detail")
+@routes.get("/positions/{entry_id}", name="position_detail")
 async def position_view(request):
     return web.json_response({
         "id": 1,
@@ -133,7 +133,7 @@ async def position_view(request):
     })
 
 
-@routes.get("/cars/", name="cars")
+@routes.get("/cars", name="cars")
 async def cars_view(request):
     return web.json_response([
         {
@@ -151,7 +151,7 @@ async def cars_view(request):
     ])
 
 
-@routes.get("/cars/{entry_id}/", name="car_detail")
+@routes.get("/cars/{entry_id}", name="car_detail")
 async def car_view(request):
     return web.json_response({
         "id": 1,
@@ -159,7 +159,7 @@ async def car_view(request):
     })
 
 
-@routes.get("/routes/", name="routes")
+@routes.get("/routes", name="routes")
 async def routes_view(request):
     result = await query.fetch_all_routes(request)
 
@@ -176,7 +176,7 @@ async def routes_view(request):
     return web.json_response({"data": data})
 
 
-@routes.get("/routes/{entry_id}/", name="route_detail")
+@routes.get("/routes/{entry_id}", name="route_detail")
 async def route_view(request):
     try:
 
@@ -194,7 +194,7 @@ async def route_view(request):
     return web.json_response({"data": route})
 
 
-@routes.post("/routes/", name="route_create")
+@routes.post("/routes", name="route_create")
 async def route_create_view(request):
     post = await request.json()
     data = post.get('data')
@@ -211,7 +211,7 @@ async def route_create_view(request):
     }, status=201)
 
 
-@routes.put("/routes/{entry_id}/", name="route_update")
+@routes.put("/routes/{entry_id}", name="route_update")
 async def route_update_view(request):
     entry_id = request.match_info['entry_id']
     put = await request.json()
@@ -236,6 +236,6 @@ async def route_update_view(request):
     }, status=200)
 
 
-@routes.delete("/routes/{entry_id}/")
+@routes.delete("/routes/{entry_id}")
 async def route_delete_view(request):
     return web.json_response({"message": "Delete!"})
