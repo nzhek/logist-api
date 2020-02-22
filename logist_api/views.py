@@ -12,327 +12,308 @@ def _default(o):
     return o.isoformat() if isinstance(o, (datetime.date, datetime.datetime)) else None
 
 
-""" Employers """
+@routes.view("/employers")
+class EmployerView(web.View):
+    """ Employers
+    """
+
+    async def get(self):
+        result = await query.EmployerQuery.fetch_all_employers(self.request)
+
+        data = json.dumps([{**r} for r in result]) if result else None
+
+        return web.json_response({"data": json.loads(data) if data else None})
+
+    async def post(self):
+        post = await self.request.json()
+        data = post.get('data')
+        if not data:
+            return web.json_response({"message": "Error incorrect data"}, status=400)
+
+        result = await query.EmployerQuery.insert_employer(self.request, data)
+
+        return web.json_response({
+            "message": "Created!",
+            "data": json.loads(json.dumps(dict(result)))
+        }, status=201)
 
 
-@routes.get("/employers", name="employers")
-async def employers_view(request):
-    result = await query.fetch_all_employers(request)
+@routes.view("/employers/{entry_id}")
+class EmployerEntryView(web.View):
+    """ Employers
+    """
 
-    data = json.dumps([{**r} for r in result]) if result else None
+    async def get(self):
+        try:
+            result = await query.Position.fetch_position(self.request, self.request.match_info['entry_id'])
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    return web.json_response({"data": json.loads(data) if data else None})
+        return web.json_response({"data": json.loads(json.dumps(dict(result)))})
 
+    async def put(self):
+        entry_id = self.request.match_info['entry_id']
+        put = await self.request.json()
+        data = put.get('data')
 
-@routes.post("/employers", name="employers_create")
-async def employers_create_view(request):
-    post = await request.json()
-    data = post.get('data')
-    if not data:
-        return web.json_response({"message": "Error incorrect data"}, status=400)
+        try:
+            result = await query.EmployerQuery.update_employer(self.request, entry_id, data)
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    result = await query.insert_employer(request, data)
-
-    return web.json_response({
-        "message": "Created!",
-        "data": json.loads(json.dumps(dict(result)))
-    }, status=201)
-
-
-@routes.get("/employers/{entry_id}", name="employer_detail")
-async def employer_view(request):
-    try:
-
-        result = await query.fetch_position(request, request.match_info['entry_id'])
-
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    return web.json_response({"data": json.loads(json.dumps(dict(result)))})
+        return web.json_response({
+            "message": "Update!",
+            "data": json.loads(json.dumps(dict(result)))
+        }, status=200)
 
 
-@routes.put("/employers/{entry_id}", name="employer_update")
-async def employer_update_view(request):
-    entry_id = request.match_info['entry_id']
-    put = await request.json()
-    data = put.get('data')
+@routes.view("/statuses")
+class StatusView(web.View):
+    """ Statuses
+    """
 
-    try:
+    async def get(self):
+        result = await query.Status.fetch_all_statuses(self.request)
 
-        result = await query.update_employer(request, entry_id, data)
+        data = json.dumps([{**r} for r in result]) if result else None
 
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
+        return web.json_response({"data": json.loads(data) if data else None})
 
-    return web.json_response({
-        "message": "Update!",
-        "data": json.loads(json.dumps(dict(result)))
-    }, status=200)
+    async def post(self):
+        post = await self.request.json()
+        data = post.get('data')
+        if not data:
+            return web.json_response({"message": "Error incorrect data"}, status=400)
 
+        result = await query.Status.insert_status(self.request, data)
 
-""" Statuses """
-
-
-@routes.get("/statuses", name="statuses")
-async def statuses_view(request):
-    result = await query.fetch_all_statuses(request)
-
-    data = json.dumps([{**r} for r in result]) if result else None
-
-    return web.json_response({"data": json.loads(data) if data else None})
+        return web.json_response({
+            "message": "Created!",
+            "data": json.dumps(dict(result))
+        }, status=201)
 
 
-@routes.post("/statuses", name="statuses_create")
-async def statuses_create_view(request):
-    post = await request.json()
-    data = post.get('data')
-    if not data:
-        return web.json_response({"message": "Error incorrect data"}, status=400)
+@routes.view("/statuses/{entry_id}")
+class StatusEntryView(web.View):
+    """ Status entry
+    """
 
-    result = await query.insert_status(request, data)
+    async def get(self):
+        try:
+            result = await query.Status.fetch_status(self.request, self.request.match_info['entry_id'])
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    return web.json_response({
-        "message": "Created!",
-        "data": json.dumps(dict(result))
-    }, status=201)
+        return web.json_response({"data": json.loads(json.dumps(dict(result)))})
 
+    async def put(self):
+        entry_id = self.request.match_info['entry_id']
+        put = await self.request.json()
+        data = put.get('data')
 
-@routes.get("/statuses/{entry_id}", name="status_detail")
-async def status_view(request):
-    try:
+        try:
+            result = await query.Status.update_status(self.request, entry_id, data)
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-        result = await query.fetch_status(request, request.match_info['entry_id'])
-
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    return web.json_response({"data": json.loads(json.dumps(dict(result)))})
-
-
-@routes.put("/statuses/{entry_id}", name="status_update")
-async def status_update_view(request):
-    entry_id = request.match_info['entry_id']
-    put = await request.json()
-    data = put.get('data')
-
-    try:
-
-        result = await query.update_status(request, entry_id, data)
-
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    return web.json_response({
-        "message": "Update!",
-        "data": json.loads(json.dumps(dict(result)))
-    }, status=200)
+        return web.json_response({
+            "message": "Update!",
+            "data": json.loads(json.dumps(dict(result)))
+        }, status=200)
 
 
-""" Positions """
+@routes.view("/positions")
+class PositionView(web.View):
+    """ Positions
+    """
+
+    async def get(self):
+        result = await query.Position.fetch_all_positions(self.request)
+
+        data = json.dumps([{**r} for r in result]) if result else None
+
+        return web.json_response({"data": json.loads(data) if data else None})
+
+    async def post(self):
+        post = await self.request.json()
+        data = post.get('data')
+        if not data:
+            return web.json_response({"message": "Error incorrect data"}, status=400)
+
+        result = await query.Position.insert_position(self.request, data)
+
+        return web.json_response({
+            "message": "Created!",
+            "data": json.loads(json.dumps({**result}))
+        }, status=201)
 
 
-@routes.get("/positions", name="positions")
-async def positions_view(request):
-    result = await query.fetch_all_positions(request)
+@routes.view("/positions/{entry_id}")
+class PositionEntryView(web.View):
+    """ Positions entry
+    """
 
-    data = json.dumps([{**r} for r in result]) if result else None
+    async def get(self):
+        try:
+            result = await query.Position.fetch_position(self.request, self.request.match_info['entry_id'])
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    return web.json_response({"data": json.loads(data) if data else None})
+        return web.json_response({"data": json.loads(json.dumps(dict(result)))})
 
+    async def put(self):
+        entry_id = self.request.match_info['entry_id']
+        put = await self.request.json()
+        data = put.get('data')
 
-@routes.post("/positions", name="positions_create")
-async def positions_create_view(request):
-    post = await request.json()
-    data = post.get('data')
-    if not data:
-        return web.json_response({"message": "Error incorrect data"}, status=400)
+        try:
+            result = await query.Position.update_position(self.request, entry_id, data)
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    result = await query.insert_position(request, data)
-
-    return web.json_response({
-        "message": "Created!",
-        "data": json.loads(json.dumps({**result}))
-    }, status=201)
-
-
-@routes.get("/positions/{entry_id}", name="position_detail")
-async def position_view(request):
-    try:
-
-        result = await query.fetch_position(request, request.match_info['entry_id'])
-
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    return web.json_response({"data": json.loads(json.dumps(dict(result)))})
-
-
-@routes.put("/positions/{entry_id}", name="position_update")
-async def position_update_view(request):
-    entry_id = request.match_info['entry_id']
-    put = await request.json()
-    data = put.get('data')
-
-    try:
-
-        result = await query.update_position(request, entry_id, data)
-
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    return web.json_response({
-        "message": "Update!",
-        "data": json.loads(json.dumps(dict(result)))
-    }, status=200)
+        return web.json_response({
+            "message": "Update!",
+            "data": json.loads(json.dumps(dict(result)))
+        }, status=200)
 
 
 @routes.get("/positions/{entry_id}/employers", name="position_employers")
 async def position_employers_view(request):
     pos_id = request.match_info['entry_id']
 
-    result = await query.fetch_all_employers_by_position(request, pos_id)
+    result = await query.EmployerQuery.fetch_all_employers_by_position(request, pos_id)
 
     data = json.dumps([{**r} for r in result]) if result else None
 
     return web.json_response({"data": json.loads(data) if data else None})
 
 
-""" Cars """
+@routes.view("/cars")
+class CarsView(web.View):
+    """ Cars
+    """
+
+    async def get(self):
+        result = await query.Car.fetch_all_cars(self.request)
+
+        data = json.loads(json.dumps([{**r} for r in result])) if result else None
+
+        return web.json_response({"data": data})
+
+    async def post(self):
+        post = await self.request.json()
+        data = post.get('data')
+        if not data:
+            return web.json_response({"message": "Error incorrect data"}, status=400)
+
+        result = await query.Car.insert_car(self.request, data)
+
+        return web.json_response({
+            "message": "Created!",
+            "data": json.loads(json.dumps({**result}))
+        }, status=201)
 
 
-@routes.get("/cars", name="cars")
-async def cars_view(request):
-    result = await query.fetch_all_cars(request)
+@routes.view("/cars/{entry_id}")
+class CarEntryView(web.View):
+    """ Cars entry
+    """
 
-    data = json.loads(json.dumps([{**r} for r in result])) if result else None
+    async def get(self):
+        try:
+            result = await query.Car.fetch_car(self.request, self.request.match_info['entry_id'])
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    return web.json_response({"data": data})
+        return web.json_response({"data": json.loads(json.dumps({**result}))})
 
+    async def put(self):
+        entry_id = self.request.match_info['entry_id']
+        put = await self.request.json()
+        data = put.get('data')
 
-@routes.post("/cars", name="cars_create")
-async def cars_create_view(request):
-    post = await request.json()
-    data = post.get('data')
-    if not data:
-        return web.json_response({"message": "Error incorrect data"}, status=400)
+        try:
+            result = await query.Car.update_car(self.request, entry_id, data)
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    result = await query.insert_car(request, data)
-
-    return web.json_response({
-        "message": "Created!",
-        "data": json.loads(json.dumps({**result}))
-    }, status=201)
-
-
-@routes.get("/cars/{entry_id}", name="car_detail")
-async def car_view(request):
-    try:
-
-        result = await query.fetch_car(request, request.match_info['entry_id'])
-
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    return web.json_response({"data": json.loads(json.dumps({**result}))})
+        return web.json_response({
+            "message": "Update!",
+            "data": json.loads(json.dumps(dict(result)))
+        }, status=200)
 
 
-@routes.put("/cars/{entry_id}", name="car_update")
-async def car_update_view(request):
-    entry_id = request.match_info['entry_id']
-    put = await request.json()
-    data = put.get('data')
+@routes.view("/routes")
+class RouteView(web.View):
+    """ Routes
+    """
 
-    try:
+    async def get(self):
+        result = await query.Route.fetch_all_routes(self.request)
 
-        result = await query.update_car(request, entry_id, data)
+        data = [dict(r) for r in result]
 
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    return web.json_response({
-        "message": "Update!",
-        "data": json.loads(json.dumps(dict(result)))
-    }, status=200)
-
-
-""" Routes """
-
-
-@routes.get("/routes", name="routes")
-async def routes_view(request):
-    result = await query.fetch_all_routes(request)
-
-    data = [dict(r) for r in result]
-
-    async def replace_all():
         for d in data:
             d["car"] = ''
             d["rate_without_percent"] = d['rate_common'] - (d['rate_common'] * (d['percent_org'] / 100))
             d["date_arrival"] = _default(d["date_arrival"]) if "date_arrival" in d else None
             d["date_departure"] = _default(d["date_departure"]) if "date_departure" in d else None
 
-    await replace_all()
-    return web.json_response({"data": data if data else None})
+        return web.json_response({"data": data if data else None})
+
+    async def post(self):
+        post = await self.request.json()
+        result = await query.Route.insert_route(self.request, post.get('data'))
+
+        return web.json_response({
+            "message": "Created!",
+            "data": json.loads(
+                json.dumps(
+                    {**result},
+                    default=lambda o: o.isoformat() if isinstance(o, (datetime.date, datetime.datetime)) else None
+                ))
+        }, status=201)
 
 
-@routes.get("/routes/{entry_id}", name="route_detail")
-async def route_view(request):
-    try:
+@routes.view("/routes/{entry_id}")
+class RouteEntryView(web.View):
+    """ Route entry
+    """
 
-        result = await query.fetch_route(request, request.match_info['entry_id'])
+    async def get(self):
+        try:
 
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
+            result = await query.Route.fetch_route(self.request, self.request.match_info['entry_id'])
 
-    route = dict(result)
-    route['rate_without_percent'] = route['rate_common'] - (route['rate_common'] * (route['percent_org'] / 100))
-    route['date_arrival'] = _default(route['date_arrival']) if "date_arrival" in route else None
-    route['date_departure'] = _default(route['date_departure']) if "date_departure" in route else None
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    return web.json_response({"data": route if route else None})
+        route = dict(result)
+        route['rate_without_percent'] = route['rate_common'] - (route['rate_common'] * (route['percent_org'] / 100))
+        route['date_arrival'] = _default(route['date_arrival']) if "date_arrival" in route else None
+        route['date_departure'] = _default(route['date_departure']) if "date_departure" in route else None
 
+        return web.json_response({"data": route if route else None})
 
-@routes.post("/routes", name="route_create")
-async def route_create_view(request):
-    post = await request.json()
-    data = post.get('data')
+    async def put(self):
+        entry_id = self.request.match_info['entry_id']
+        put = await self.request.json()
+        data = put.get('data')
 
-    result = await query.insert_route(request, data)
+        try:
+            res = await query.Route.update_route(self.request, entry_id, data)
+        except RecordNotFound as err:
+            return web.HTTPNotFound(text=str(err))
 
-    return web.json_response({
-        "message": "Created!",
-        "data": json.loads(
-            json.dumps(
-                {**result},
-                default=lambda o: o.isoformat() if isinstance(o, (datetime.date, datetime.datetime)) else None
-            ))
-    }, status=201)
+        route = dict(res)
+        route["date_arrival"] = _default(route["date_arrival"])
+        route["date_departure"] = _default(route["date_departure"])
+        # route["rate_without_percent"] = route['rate_common'] - (route['rate_common'] * (route['percent_org'] / 100))
 
+        return web.json_response({
+            "message": "Update!",
+            "data": route
+        }, status=200)
 
-@routes.put("/routes/{entry_id}", name="route_update")
-async def route_update_view(request):
-    entry_id = request.match_info['entry_id']
-    put = await request.json()
-    data = put.get('data')
-
-    try:
-
-        res = await query.update_route(request, entry_id, data)
-
-    except RecordNotFound as err:
-        return web.HTTPNotFound(text=str(err))
-
-    route = dict(res)
-    route["date_arrival"] = _default(route["date_arrival"])
-    route["date_departure"] = _default(route["date_departure"])
-    # route["rate_without_percent"] = route['rate_common'] - (route['rate_common'] * (route['percent_org'] / 100))
-
-    return web.json_response({
-        "message": "Update!",
-        "data": route
-    }, status=200)
-
-
-@routes.delete("/routes/{entry_id}")
-async def route_delete_view(request):
-    return web.json_response({"message": "Delete!"})
+    async def delete(self):
+        return web.json_response({"message": "Delete!"})
