@@ -1,6 +1,5 @@
-from sqlalchemy import (MetaData, Table, Column, ForeignKey, Integer, String, Date, Text)
-
-__all__ = ['employer', 'position', 'car', 'status', 'route']
+from sqlalchemy import Table, Column, Integer, String, MetaData, Text, ForeignKey, Date
+from migrate import *
 
 meta = MetaData()
 
@@ -54,3 +53,13 @@ route = Table(
     Column('car_id', Integer, ForeignKey('car.id')),
     Column('status_id', Integer, ForeignKey('status.id')),
 )
+
+
+def upgrade(migrate_engine):
+    meta.bind = migrate_engine
+    map(lambda x: x.create(), reversed((route, employer, position, status, car)))
+
+
+def downgrade(migrate_engine):
+    meta.bind = migrate_engine
+    map(lambda x: x.drop(), (route, employer, position, status, car))

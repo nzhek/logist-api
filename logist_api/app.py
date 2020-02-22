@@ -6,6 +6,8 @@ from logist_api.middlewares import setup_middlewares
 import aiohttp_debugtoolbar
 from aiohttp_debugtoolbar import toolbar_middleware_factory
 
+import logging
+
 if __name__ == '__main__':
 
     app = web.Application()
@@ -23,5 +25,8 @@ if __name__ == '__main__':
 
     app.on_startup.append(init_pg)
     app.on_cleanup.append(close_pg)
+
+    if app['config']['app']['debug']:
+        logging.basicConfig(level=logging.DEBUG)
 
     web.run_app(app, host=app['config']['app']['host'], port=app['config']['app']['port'])
