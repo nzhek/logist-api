@@ -249,7 +249,20 @@ class RouteView(web.View):
     """
 
     async def get(self):
-        result = await query.Route.fetch_all_routes(self.request)
+        if self.request.query:
+            # machineList=&driverList=&logistList=&mechanicList=&date_departure=&date_arrival=&statusRoute=
+            filter_data = {
+                'car_id': self.request.query.get("machineList", None),
+                'driver_id': self.request.query.get("driverList", None),
+                'logist_id': self.request.query.get("logistList", None),
+                'mechanic_id': self.request.query.get("mechanicList", None),
+                'date_departure': self.request.query.get("date_departure", None),
+                'date_arrival': self.request.query.get("date_arrival", None),
+                'status_id': self.request.query.get("statusRoute", None),
+            }
+            result = await query.Route.fetch_with_filter(self.request, filter_data)
+        else:
+            result = await query.Route.fetch_all_routes(self.request)
 
         data = [dict(r) for r in result]
 
@@ -317,3 +330,8 @@ class RouteEntryView(web.View):
 
     async def delete(self):
         return web.json_response({"message": "Delete!"})
+
+
+@routes.get("/filter")
+async def filter_route(request):
+    return web.json_response({"data": None})

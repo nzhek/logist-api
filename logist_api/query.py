@@ -64,6 +64,20 @@ class Route:
     """
 
     @classmethod
+    async def fetch_with_filter(cls, request, filter_data):
+        d = {k: v for (k, v) in filter_data.items() if v != ''}
+        query = route.select()
+        for k, v in d.items():
+            if k in ('car_id', 'driver_id', 'logist_id', 'mechanic_id', 'status_id'):
+                query = query.where(route.c[k].in_(v.split(',')))
+            else:
+                query = query.where(route.c[k] == v)
+
+        async with request.app['db'].acquire() as conn:
+            result = await (await conn.execute(query.order_by(route.c.id))).fetchall()
+            return result
+
+    @classmethod
     async def fetch_all_routes(cls, request):
         async with request.app['db'].acquire() as conn:
             result = await (await conn.execute(route.select().order_by(route.c.id))).fetchall()
